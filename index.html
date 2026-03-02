@@ -570,6 +570,7 @@ const QUESTIONS = [
       {icon:'🤖',text:'导入AI软件・数字化管理系统',val:'ai'},
       {icon:'⚙️',text:'导入自动化设备或自动化系统',val:'auto'},
       {icon:'❄️',text:'更换节能空调设备',val:'aircon'},
+      {icon:'🤔',text:'不确定 / 正在了解中',val:'unsure'},
       {icon:'🚫',text:'暂无以上需求',val:'none',exclusive:true},
     ] },
   { id:'q8', text:'去年的年营业额大约是多少？', sub:'大概估算即可，不需要精确数字', type:'single',
@@ -587,12 +588,8 @@ const SUBSIDIES = [
     amount:'最高 350万円', amountNum:3500000,
     tag:'高度匹配',
     detail:'<b>申请条件：</b><br>• 企业需完成至少一期决算<br>• 法人年营业额满 800万日元 / 个人事业主满 900万日元<br>• 符合条件的主体每年可申请一次<br><br><b>资金用途：</b>购买AI工具、数字化管理系统、自动化办公软件等',
-    match:a=>{
-      // 有AI需求 或 未选暂无需求 即可匹配
-      const q7 = a.q7||[];
-      return q7.includes('ai') || (!q7.includes('none') && q7.length>0);
-    },
-    reasons:()=>['有数字化/AI工具导入的需求或意向','此补助金每年可申请，资金用途广泛']
+    match:a=>true, // 兜底，无条件触发
+    reasons:()=>['数字化・AI工具导入是目前最广泛的补助方向','每年均可申请，资金用途灵活','建议咨询了解您的具体适用方案']
   },
   { id:'career_up', name:'员工转正助成金', nameJa:'キャリアアップ助成金', icon:'📝',
     amount:'最低 40万円～最高 80万円 / 人', amountNum:800000,
@@ -615,24 +612,16 @@ const SUBSIDIES = [
     amount:'设备价值最高上千万円（零成本更换）', amountNum:10000000,
     tag:'高度匹配',
     detail:'<b>申请条件：</b><br>• 仅面向东京都内企业<br>• 无行业及年限限制，全行业均可申请<br>• 有节电/节能需求即可咨询<br><br><b>说明：</b>专业团队协助完成设备参数评估，实现零成本设备升级',
-    match:a=>a.q3==='tokyo' && (a.q7||[]).includes('aircon'),
+    match:a=>a.q3==='tokyo' && ((a.q7||[]).includes('aircon')||(a.q7||[]).includes('unsure')),
     reasons:()=>['公司位于东京都，符合地区条件','有节能空调更换需求','全行业可申请，无门槛限制']
   },
   { id:'shorikika', name:'省力化补助金', nameJa:'省力化補助金・一般型', icon:'⚙️',
     amount:'最高 1500万円（报销50%）', amountNum:15000000,
     tag:'高度匹配',
     detail:'<b>档位一：</b>年营业额4500万以上，1-5名正社员，最高750万円<br><b>档位二：</b>年营业额9000万以上，6-20名正社员，最高1500万円<br><br><b>资金用途：</b>导入自动化系统或自动化设备，报销50%费用',
-    match:a=>(a.q7||[]).includes('auto'),
+    match:a=>(a.q7||[]).includes('auto')||(a.q7||[]).includes('unsure'),
     reasons:()=>['有导入自动化设备/系统的需求','此项覆盖50%设备费用，实际到手225万～450万円','可协助评估具体档位资格']
-  },
-  // ── 兜底项目：任何人都可能匹配的 ──
-  { id:'general', name:'中小企业经营改善补助金', nameJa:'中小企業経営改善補助金', icon:'💼',
-    amount:'最高 200万円', amountNum:2000000,
-    tag:'可能符合',
-    detail:'<b>申请条件：</b><br>• 中小企业及个人事业主均可申请<br>• 用于经营改善、设备投资、广告宣传等多种用途<br>• 各都道府县均有对应项目<br><br><b>说明：</b>具体金额及条件因地区和时期而异，建议咨询确认',
-    match:a=>true, // 兜底，所有人都显示
-    reasons:()=>['中小企业及个人事业主均可申请','用途广泛，经营改善相关支出均可申报','建议咨询了解您所在地区的最新项目']
-  },
+  }
 ];
 
 // ══════ STATE ══════
