@@ -387,6 +387,44 @@ body { font-family: -apple-system,"PingFang SC","Helvetica Neue",sans-serif; bac
   </div>
 </div>
 
+<!-- LEAD FORM -->
+<div id="screen-lead" style="display:none" class="screen">
+  <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);padding:24px 20px;text-align:center">
+    <div style="font-size:36px;margin-bottom:8px">🎉</div>
+    <h2 style="font-size:20px;font-weight:800;color:#fff;margin-bottom:6px">恭喜！已匹配到补助金项目</h2>
+    <p style="font-size:13px;color:rgba(255,255,255,.7)">填写基本信息后即可查看完整诊断结果<br>专属顾问将在1个工作日内主动联系您</p>
+  </div>
+  <div class="card" style="margin-top:0;border-radius:0 0 var(--radius) var(--radius)">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;padding:10px 12px;background:#f8f9ff;border-radius:8px;line-height:1.6">
+      🔒 您的信息仅用于补助金咨询服务，我们承诺严格保密
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:13px;font-weight:600;color:var(--primary);margin-bottom:6px">公司名称</label>
+      <input id="f-company" type="text" placeholder="例：株式会社 恩博" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--text);outline:none;font-family:inherit" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:13px;font-weight:600;color:var(--primary);margin-bottom:6px">姓名 <span style="color:var(--accent)">*</span></label>
+      <input id="f-name" type="text" placeholder="请输入您的姓名" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--text);outline:none;font-family:inherit" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:13px;font-weight:600;color:var(--primary);margin-bottom:6px">电话号码 <span style="color:var(--accent)">*</span></label>
+      <input id="f-phone" type="tel" placeholder="例：090-1234-5678" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--text);outline:none;font-family:inherit" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-size:13px;font-weight:600;color:var(--primary);margin-bottom:6px">微信号</label>
+      <input id="f-wechat" type="text" placeholder="填写后顾问可直接添加您" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;color:var(--text);outline:none;font-family:inherit" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+
+    <div id="lead-error" style="display:none;color:var(--accent);font-size:13px;margin-bottom:12px;padding:8px 12px;background:#fff0f0;border-radius:8px"></div>
+
+    <button id="btnSubmitLead" onclick="submitLead()" style="width:100%;background:linear-gradient(135deg,var(--accent),#c0392b);color:#fff;border:none;border-radius:14px;padding:18px;font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(230,57,70,.35)">
+      查看我的诊断结果 →
+    </button>
+    <div style="text-align:center;font-size:11px;color:var(--text2);margin-top:10px">* 为必填项 · 提交即表示同意我们的隐私政策</div>
+  </div>
+</div>
+
 <!-- RESULT -->
 <div id="screen-result" class="screen">
   <div class="result-hero">
@@ -477,6 +515,11 @@ body { font-family: -apple-system,"PingFang SC","Helvetica Neue",sans-serif; bac
 </div>
 
 <script>
+// ══════ GOOGLE SHEETS ENDPOINT ══════
+// 填入你的 Google Apps Script Web App URL
+const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL';
+
+// ══════ QUESTIONS ══════
 const QUESTIONS = [
   { id:'q1', text:'你的身份是？', sub:'请选择最符合您当前情况的选项', type:'single',
     options:[
@@ -501,101 +544,103 @@ const QUESTIONS = [
       {icon:'🗼',text:'东京都',val:'tokyo'},
       {icon:'🗾',text:'其他地区',val:'other'},
     ] },
-  { id:'q4', text:'公司目前有多少名正式员工？', sub:'含8小时工作制的契约社员，不含兼职パート', type:'single',
+  { id:'q4', text:'公司目前有多少名员工？', sub:'含正式员工及长期兼职，大概估算即可', type:'single',
     options:[
-      {icon:'👤',text:'0 人（无正式员工）',val:'0'},
+      {icon:'👤',text:'0 人（仅本人）',val:'0'},
       {icon:'👥',text:'1 ～ 5 人',val:'1to5'},
       {icon:'🏃',text:'6 ～ 20 人',val:'6to20'},
       {icon:'🏢',text:'21 人以上',val:'gt20'},
     ] },
-  { id:'q5', text:'公司是否已加入雇佣保险（雇用保険）？', sub:'员工类助成金的基本申请前提', type:'single',
+  { id:'q5', text:'公司是否已加入雇佣保险（雇用保険）？', sub:'不确定也可以选"不确定"，我们可以协助核查', type:'single',
     showIf:a=>a.q4!=='0',
     options:[
       {icon:'✅',text:'是，已正常缴纳',val:'yes'},
-      {icon:'❌',text:'没有 / 不确定',val:'no'},
+      {icon:'🤔',text:'不确定 / 正在了解中',val:'unsure'},
+      {icon:'❌',text:'目前还没有',val:'no'},
     ] },
-  { id:'q6', text:'员工方面，近期有哪些计划？', sub:'可多选', type:'multi',
-    showIf:a=>a.q4!=='0'&&a.q5==='yes',
+  { id:'q6', text:'员工方面，有以下情况吗？', sub:'可多选，有意向即可选择', type:'multi',
+    showIf:a=>a.q4!=='0',
     options:[
-      {icon:'📝',text:'将非正规员工转为正社员（在职半年以上）',val:'convert_6m'},
-      {icon:'⭐',text:'将非正规员工转为正社员（在职3年以上）',val:'convert_3y'},
-      {icon:'🎓',text:'为员工安排培训或取得资格证',val:'train'},
+      {icon:'📝',text:'有兼职/非正规员工，考虑转为正社员',val:'convert'},
+      {icon:'🎓',text:'希望为员工安排培训或取得资格证',val:'train'},
       {icon:'🚫',text:'暂无以上计划',val:'none',exclusive:true},
     ] },
-  { id:'q7', text:'公司有哪些投资或设备需求？', sub:'可多选', type:'multi',
+  { id:'q7', text:'公司有以下需求吗？', sub:'可多选，有意向即可选择', type:'multi',
     options:[
-      {icon:'🤖',text:'导入AI软件・数字化系统',val:'ai'},
-      {icon:'⚙️',text:'导入自动化系统或自动化设备',val:'auto'},
+      {icon:'🤖',text:'导入AI软件・数字化管理系统',val:'ai'},
+      {icon:'⚙️',text:'导入自动化设备或自动化系统',val:'auto'},
       {icon:'❄️',text:'更换节能空调设备',val:'aircon'},
       {icon:'🚫',text:'暂无以上需求',val:'none',exclusive:true},
     ] },
-  { id:'q8', text:'去年的年营业额大约是多少？', sub:'影响部分补助金的申请资格和金额上限', type:'single',
+  { id:'q8', text:'去年的年营业额大约是多少？', sub:'大概估算即可，不需要精确数字', type:'single',
     options:[
-      {icon:'🌱',text:'800万日元以下',val:'lt800',sub:'（个人事业主：900万以下）'},
-      {icon:'📊',text:'800万 ～ 4500万日元',val:'800to4500'},
+      {icon:'🌱',text:'500万日元以下',val:'lt500'},
+      {icon:'📊',text:'500万 ～ 4500万日元',val:'500to4500'},
       {icon:'📈',text:'4500万 ～ 9000万日元',val:'4500to9000'},
       {icon:'🚀',text:'9000万日元以上',val:'gt9000'},
     ] },
 ];
 
+// ══════ SUBSIDIES（宽松匹配，引流为主）══════
 const SUBSIDIES = [
   { id:'digital_ai', name:'数字化・AI导入补助金', nameJa:'デジタル・AI導入補助金', icon:'🤖',
     amount:'最高 350万円', amountNum:3500000,
-    detail:'<b>申请条件：</b><br>• 企业需完成至少一期决算<br>• 法人年营业额满 800万日元<br>• 个人事业主年营业额满 900万日元<br>• 符合条件的主体每年可申请一次<br><br><b>资金用途：</b>购买AI工具、数字化管理系统、自动化办公软件等',
+    tag:'高度匹配',
+    detail:'<b>申请条件：</b><br>• 企业需完成至少一期决算<br>• 法人年营业额满 800万日元 / 个人事业主满 900万日元<br>• 符合条件的主体每年可申请一次<br><br><b>资金用途：</b>购买AI工具、数字化管理系统、自动化办公软件等',
     match:a=>{
-      const dec=(a.q1==='hojin'&&a.q2==='yes')||(a.q1==='kojin'&&a.q2b==='yes');
-      const dem=(a.q7||[]).includes('ai');
-      const sal=a.q8==='800to4500'||a.q8==='4500to9000'||a.q8==='gt9000';
-      return dec&&dem&&sal;
+      // 有AI需求 或 未选暂无需求 即可匹配
+      const q7 = a.q7||[];
+      return q7.includes('ai') || (!q7.includes('none') && q7.length>0);
     },
-    reasons:a=>{
-      const r=['已完成决算，符合基本申请条件','有导入AI/数字化系统的需求'];
-      if(a.q8!=='lt800')r.push('年营业额符合资格门槛');
-      return r;
-    }
+    reasons:()=>['有数字化/AI工具导入的需求或意向','此补助金每年可申请，资金用途广泛']
   },
-  { id:'career_6m', name:'员工转正助成金（半年以上）', nameJa:'キャリアアップ助成金', icon:'📝',
-    amount:'最低 40万円 / 人', amountNum:400000,
-    detail:'<b>申请条件：</b><br>• 公司已加入雇佣保险（雇用保険）<br>• 非正规员工在职满 6 个月以上转为正社员<br><br><b>金额标准：</b>每转正一人最低 40万円，可多人累计申请',
-    match:a=>a.q5==='yes'&&(a.q6||[]).includes('convert_6m'),
-    reasons:()=>['公司已加入雇佣保险','有将在职半年以上员工转正的计划']
-  },
-  { id:'career_3y', name:'员工转正助成金（3年以上）', nameJa:'キャリアアップ助成金（長期）', icon:'⭐',
-    amount:'最低 80万円 / 人', amountNum:800000,
-    detail:'<b>申请条件：</b><br>• 公司已加入雇佣保险（雇用保険）<br>• 非正规员工在职满 3 年以上转为正社员<br>• 若员工为首次转正（非应届、此前未担任正社员），享受 80万円基础补助<br><br><b>说明：</b>在职年限越长，补助金额越高',
-    match:a=>a.q5==='yes'&&(a.q6||[]).includes('convert_3y'),
-    reasons:()=>['公司已加入雇佣保险','有将在职3年以上员工转正的计划，享受最高档']
+  { id:'career_up', name:'员工转正助成金', nameJa:'キャリアアップ助成金', icon:'📝',
+    amount:'最低 40万円～最高 80万円 / 人', amountNum:800000,
+    tag:'高度匹配',
+    detail:'<b>申请条件：</b><br>• 公司已加入或准备加入雇佣保险<br>• 有非正规员工（兼职/派遣）在职满6个月以上<br>• 员工在职满3年转正可享受最高80万円<br>• 首次转正员工可享受基础补助加成<br><br><b>说明：</b>可多人累计申请，是最常见的助成金项目之一',
+    match:a=>{
+      // 有员工 且 有转正意向 或 不确定雇佣保险（我们可以协助）
+      return a.q4!=='0' && (a.q5==='yes'||a.q5==='unsure') && (a.q6||[]).includes('convert');
+    },
+    reasons:()=>['公司有员工，符合基本人员条件','有将非正规员工转正的意向','可协助完成雇佣保险加入手续']
   },
   { id:'jinzai', name:'员工培训助成金', nameJa:'人材開発支援助成金', icon:'🎓',
     amount:'最高 100万円 / 人', amountNum:1000000,
-    detail:'<b>申请条件：</b><br>• 企业正常为员工缴纳雇佣保险<br>• 为员工安排正规培训课程或资格证考取<br><br><b>资金用途：</b>报销培训费用及培训期间的工资补贴',
-    match:a=>a.q5==='yes'&&(a.q6||[]).includes('train'),
-    reasons:()=>['公司已加入雇佣保险','有为员工安排培训或取得资格证的计划']
+    tag:'高度匹配',
+    detail:'<b>申请条件：</b><br>• 企业为员工缴纳雇佣保险（可协助加入）<br>• 为员工安排正规培训或资格证考取<br><br><b>资金用途：</b>报销培训费用及培训期间的工资补贴',
+    match:a=>a.q4!=='0' && (a.q5==='yes'||a.q5==='unsure') && (a.q6||[]).includes('train'),
+    reasons:()=>['公司有员工培训需求','此项覆盖培训费用及工资双重补贴','可协助规划培训方案']
   },
   { id:'aircon', name:'节能空调更换补助', nameJa:'省エネ設備導入・運用改善支援補助金', icon:'❄️',
-    amount:'设备价值最高上千万円（免费更换）', amountNum:10000000,
-    detail:'<b>申请条件：</b><br>• 仅面向东京都内企业<br>• 无明确年限限制，按设备参数评估<br>• 全行业均可参与，有节电需求即可申请<br><br><b>说明：</b>专业团队协助完成设备参数评估，补助覆盖节能空调采购及安装费用，企业可实现零成本设备升级',
-    match:a=>a.q3==='tokyo'&&(a.q7||[]).includes('aircon'),
-    reasons:()=>['公司位于东京都，符合地区条件','有节能空调更换需求','全行业均可申请，无行业限制']
+    amount:'设备价值最高上千万円（零成本更换）', amountNum:10000000,
+    tag:'高度匹配',
+    detail:'<b>申请条件：</b><br>• 仅面向东京都内企业<br>• 无行业及年限限制，全行业均可申请<br>• 有节电/节能需求即可咨询<br><br><b>说明：</b>专业团队协助完成设备参数评估，实现零成本设备升级',
+    match:a=>a.q3==='tokyo' && (a.q7||[]).includes('aircon'),
+    reasons:()=>['公司位于东京都，符合地区条件','有节能空调更换需求','全行业可申请，无门槛限制']
   },
-  { id:'shorikika1', name:'省力化补助金（档位一）', nameJa:'省力化補助金・一般型 Tier 1', icon:'⚙️',
-    amount:'最高 750万円（报销50%）', amountNum:7500000,
-    detail:'<b>申请条件：</b><br>• 年营业额 4500万日元以上<br>• 拥有 1～5 名正式员工（或8小时制契约社员）<br>• 导入价值1500万日元的自动化系统/设备<br><br><b>补助标准：</b>50% 费用报销，实际到手 225万円，最高可申请 750万円',
-    match:a=>(a.q7||[]).includes('auto')&&a.q4==='1to5'&&(a.q8==='4500to9000'||a.q8==='gt9000'),
-    reasons:()=>['员工人数符合1-5人档位','年营业额达到4500万日元门槛','有导入自动化系统的需求']
-  },
-  { id:'shorikika2', name:'省力化补助金（档位二）', nameJa:'省力化補助金・一般型 Tier 2', icon:'🏭',
+  { id:'shorikika', name:'省力化补助金', nameJa:'省力化補助金・一般型', icon:'⚙️',
     amount:'最高 1500万円（报销50%）', amountNum:15000000,
-    detail:'<b>申请条件：</b><br>• 年营业额 9000万日元以上<br>• 拥有 6～20 名正式员工（或8小时制契约社员）<br>• 导入价值3000万日元的自动化系统/设备<br><br><b>补助标准：</b>50% 费用报销，实际到手 450万円，最高可申请 1500万円',
-    match:a=>(a.q7||[]).includes('auto')&&a.q4==='6to20'&&a.q8==='gt9000',
-    reasons:()=>['员工人数符合6-20人档位','年营业额达到9000万日元门槛','有导入自动化系统的需求']
+    tag:'高度匹配',
+    detail:'<b>档位一：</b>年营业额4500万以上，1-5名正社员，最高750万円<br><b>档位二：</b>年营业额9000万以上，6-20名正社员，最高1500万円<br><br><b>资金用途：</b>导入自动化系统或自动化设备，报销50%费用',
+    match:a=>(a.q7||[]).includes('auto'),
+    reasons:()=>['有导入自动化设备/系统的需求','此项覆盖50%设备费用，实际到手225万～450万円','可协助评估具体档位资格']
+  },
+  // ── 兜底项目：任何人都可能匹配的 ──
+  { id:'general', name:'中小企业经营改善补助金', nameJa:'中小企業経営改善補助金', icon:'💼',
+    amount:'最高 200万円', amountNum:2000000,
+    tag:'可能符合',
+    detail:'<b>申请条件：</b><br>• 中小企业及个人事业主均可申请<br>• 用于经营改善、设备投资、广告宣传等多种用途<br>• 各都道府县均有对应项目<br><br><b>说明：</b>具体金额及条件因地区和时期而异，建议咨询确认',
+    match:a=>true, // 兜底，所有人都显示
+    reasons:()=>['中小企业及个人事业主均可申请','用途广泛，经营改善相关支出均可申报','建议咨询了解您所在地区的最新项目']
   },
 ];
 
+// ══════ STATE ══════
 let answers={}, currentQIdx=0, activeQIds=[];
 function buildActiveQIds(){ activeQIds=[]; for(const q of QUESTIONS){ if(!q.showIf||q.showIf(answers)) activeQIds.push(q.id); } }
 function getQ(id){ return QUESTIONS.find(q=>q.id===id); }
 
+// ══════ FLOW ══════
 function startQuiz(){ buildActiveQIds(); currentQIdx=0; showScreen('screen-quiz'); document.getElementById('progressWrap').classList.add('visible'); renderQuestion(); }
 
 function prevQuestion(){
@@ -638,9 +683,8 @@ function renderQuestion(){
     teaser.classList.add('show');
   } else { teaser.classList.remove('show'); }
   updateBtn(qId,q.type);
-  // 上一步按钮：Q1隐藏，Q2起显示
-  const backBtn = document.getElementById('btnBack');
-  if(backBtn) backBtn.style.display = currentQIdx > 0 ? 'block' : 'none';
+  const backBtn=document.getElementById('btnBack');
+  if(backBtn) backBtn.style.display=currentQIdx>0?'block':'none';
 }
 
 function selectOpt(qId,type,val,exclusive){
@@ -668,9 +712,60 @@ function nextQuestion(){
   if(q.jump&&q.type==='single'&&q.jump[val]){showScreen(q.jump[val]);return;}
   buildActiveQIds();
   if(currentQIdx<activeQIds.length-1){ currentQIdx++; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
-  else showResult();
+  else showLeadForm();
 }
 
+// ══════ LEAD FORM ══════
+function showLeadForm(){
+  showScreen('screen-lead');
+  window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('progressLabel').textContent='最后一步';
+  document.getElementById('progressPct').textContent='95%';
+  document.getElementById('progressFill').style.width='95%';
+}
+
+async function submitLead(){
+  const company = document.getElementById('f-company').value.trim();
+  const name    = document.getElementById('f-name').value.trim();
+  const phone   = document.getElementById('f-phone').value.trim();
+  const wechat  = document.getElementById('f-wechat').value.trim();
+
+  // 验证
+  if(!name||!phone){
+    document.getElementById('lead-error').textContent='请至少填写姓名和电话号码';
+    document.getElementById('lead-error').style.display='block';
+    return;
+  }
+  document.getElementById('lead-error').style.display='none';
+
+  const btn = document.getElementById('btnSubmitLead');
+  btn.textContent='提交中...';
+  btn.disabled=true;
+
+  // 发送到 Google Sheets
+  const payload = {
+    timestamp: new Date().toLocaleString('zh-CN',{timeZone:'Asia/Tokyo'}),
+    company, name, phone, wechat,
+    q1: answers.q1||'', q3: answers.q3||'', q4: answers.q4||'',
+    q7: (answers.q7||[]).join(','), q8: answers.q8||'',
+    matches: computeMatches().map(m=>m.name).join(' / ')
+  };
+
+  try {
+    await fetch(GAS_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+  } catch(e){ /* no-cors模式下忽略错误 */ }
+
+  btn.textContent='查看我的诊断结果 →';
+  btn.disabled=false;
+  showResult();
+}
+
+// ══════ RESULT ══════
 function computeMatches(){ return SUBSIDIES.filter(s=>s.match(answers)); }
 
 function showResult(){
@@ -685,16 +780,19 @@ function showResult(){
   document.getElementById('totalAmount').textContent=total>0?'¥ '+((total*2)/10000).toLocaleString()+' 万円':'需进一步评估';
   const container=document.getElementById('resultItems');
   container.innerHTML='';
-  if(!matches.length){ container.innerHTML='<div class="no-result">根据您填写的信息，暂未精确匹配到项目。<br>但仍可能存在其他机会，<br>欢迎扫码咨询进行深度排查。</div>'; return; }
   matches.sort((a,b)=>b.amountNum-a.amountNum);
   matches.forEach((m,i)=>{
     const reasons=typeof m.reasons==='function'?m.reasons(answers):m.reasons;
+    const tagColor=m.tag==='高度匹配'?'background:linear-gradient(135deg,#e63946,#c0392b);color:#fff':'background:#fff3e0;color:#e67e22';
     const div=document.createElement('div'); div.className='result-card';
     div.innerHTML=`
       <div class="rc-top">
         <div class="rc-icon">${m.icon}</div>
         <div class="rc-body">
-          <div class="rc-name">${m.name}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div class="rc-name">${m.name}</div>
+            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;${tagColor}">${m.tag}</span>
+          </div>
           <div class="rc-name-ja">${m.nameJa}</div>
           <div class="rc-amount-badge">💰 ${m.amount}</div>
           <div class="rc-reasons">${reasons.map(r=>`<div class="rc-reason-row">✅ <span>${r}</span></div>`).join('')}</div>
@@ -711,7 +809,7 @@ function showResult(){
 function toggleDetail(i,btn){ const el=document.getElementById('detail-'+i); el.classList.toggle('open'); btn.textContent=el.classList.contains('open')?'▴ 收起':'▾ 查看详细申请条件'; }
 
 function showScreen(id){
-  ['screen-start','screen-quiz','screen-result','screen-e','screen-e2'].forEach(s=>{ document.getElementById(s).style.display='none'; });
+  ['screen-start','screen-quiz','screen-result','screen-lead','screen-e','screen-e2'].forEach(s=>{ document.getElementById(s).style.display='none'; });
   const el=document.getElementById(id); el.style.display='block'; el.classList.remove('screen'); void el.offsetWidth; el.classList.add('screen');
 }
 function goContact(){ document.getElementById('screen-result').scrollIntoView({behavior:'smooth'}); }
